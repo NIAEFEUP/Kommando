@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinectShooter", "KinectShooter\KinectShooter.csproj", "{8EB3B3F0-DDCB-494B-A0D9-E172D60BC968}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kinect", "Kinect\Kinect.csproj", "{7041AF5B-AD01-4E03-AD77-1202A3BEFE12}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8EB3B3F0-DDCB-494B-A0D9-E172D60BC968}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EB3B3F0-DDCB-494B-A0D9-E172D60BC968}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EB3B3F0-DDCB-494B-A0D9-E172D60BC968}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EB3B3F0-DDCB-494B-A0D9-E172D60BC968}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7041AF5B-AD01-4E03-AD77-1202A3BEFE12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7041AF5B-AD01-4E03-AD77-1202A3BEFE12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7041AF5B-AD01-4E03-AD77-1202A3BEFE12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7041AF5B-AD01-4E03-AD77-1202A3BEFE12}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
