@@ -96,6 +96,13 @@
       <Project>{7041af5b-ad01-4e03-ad77-1202a3befe12}</Project>
       <Name>Kinect</Name>
     </ProjectReference>
+    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
+      <Project>{2ace8cdc-bd53-477e-bd21-baf501a67e03}</Project>
+      <Name>UtilityLib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\background.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

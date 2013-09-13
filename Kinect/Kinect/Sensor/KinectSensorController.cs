@@ -147,6 +147,7 @@ namespace Kinect.Sensor
                         if (this.TrackedSkeletonReady != null)
                         {
                             this.TrackedSkeletonReady(closestSkeleton);
+                            return;
                         }
                     }
                 }
@@ -170,6 +171,13 @@ namespace Kinect.Sensor
                         }
                     }
                 }
+            }
+
+            // In the default case a null is returned to inform
+            // that no skeleton was recognized.
+            if (this.TrackedSkeletonReady != null)
+            {
+                this.TrackedSkeletonReady(null);
             }
         }
 
