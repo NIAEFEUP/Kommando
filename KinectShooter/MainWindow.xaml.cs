@@ -13,6 +13,7 @@ using Kinect.Toolbox;
 using ControLib;
 using System.Threading;
 using System.Linq;
+using System.Text;
 
 namespace KinectShooter
 {
@@ -26,6 +27,7 @@ namespace KinectShooter
         private HitSkeleton hitSkeleton;
         private int skeletonId = -1;
         private Player[] players;
+        private TcpSocketClient client;
 
         // REMOVE
         private float xP = 0.0f;
@@ -136,6 +138,47 @@ namespace KinectShooter
                             p.Status = ShotStatus.Miss;
                         }
                     }
+
+                    // Build response to server.
+                    StringBuilder response = new StringBuilder("");
+                    foreach (Player pl in this.players)
+                    {
+                        // Current shot player.
+                        if (p == pl)
+                        {
+                            switch (pl.Status)
+                            {
+                                case ShotStatus.Hit:
+                                    response.Append("2,");
+                                    break;
+                                case ShotStatus.Miss:
+                                    response.Append("1,");
+                                    break;
+                                case ShotStatus.None:
+                                    response.Append("0,");
+                                    break;
+                            }
+                            pl.Status = ShotStatus.None;
+                        }
+                        // Other players.
+                        else
+                        {
+                            // If player is active.
+                            if (pl.PlayerActive)
+                            {
+                                response.Append("0,");
+                            }
+                            // If player is not active.
+                            else
+                            {
+                                response.Append("-1,");
+                            }
+                        }
+                    }
+
+                    // Append player health to response and send it.
+                    response.Append(hitSkeleton.DamageTaken);
+                    client.BeginSend(response.ToString());
                 }
             }
         }
@@ -155,6 +198,62 @@ namespace KinectShooter
             Canvas.SetTop(flyout, y - flyout.ActualHeight * 0.5f);
             flyout.FlyoutAnimation.Completed += (s, a) => MainCanvas.Children.Remove(flyout);
             flyout.Flyout();
+        }
+
+        public void callback_MessageReceived(TcpSocketClient client, string message)
+        {
+            // Data can only be processed if the player is alive.
+            if (hitSkeleton.DamageTaken >= 1.0f)
+            {
+                return;
+            }
+
+            // Check for handshake communication.
+            if (message == "whoareyou")
+            {
+                client.BeginSend("v");
+                return;
+            }
+
+            // Checks if an invoke is required.
+            if (MainCanvas.Dispatcher.CheckAccess())
+            {
+                string[] tokens = message.Split(',');
+                lock (this.players)
+                {
+                    for (int i = 0; i < players.Length; ++i)
+                    {
+                        Player p = this.players[i];
+                        float x = float.Parse(tokens[i * 4]);
+                        float y = float.Parse(tokens[i * 4 + 1]);
+                        int shot = int.Parse(tokens[i * 4 + 2]);
+                        string score = tokens[i * 4 + 3];
+                        p.Score.ScoreContent = score;
+                        MovePlayer(i, x, y);
+
+                        // Player exited.
+                        if (shot == -1 && p.PlayerActive)
+                        {
+                            RemovePlayer(i);
+                        }
+                        // Player entered.
+                        else if (shot != -1 && !p.PlayerActive)
+                        {
+                            AddPlayer(i, score);
+                        }
+
+                        // A player shot.
+                        if (shot == 1)
+                        {
+                            FirePlayer(i);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MainCanvas.Dispatcher.Invoke(new Action(() => callback_MessageReceived(client, message)));
+            }
         }
 
         /// <summary>
@@ -186,6 +285,11 @@ namespace KinectShooter
                 // Scoreboard animation.
                 Storyboard sb = (Storyboard)this.FindResource("ScoreboardAppearStoryboard");
                 sb.Begin();
+
+                // Start TCP client.
+                this.client = new TcpSocketClient();
+                this.client.MessageReceived += callback_MessageReceived;
+                this.client.BeginReceive();
             }
             /*// Disengage animations (to remove later in production).
             else if (args.GestureType == KinectGestureType.WaveLeftHand && this.skeletonId != -1)
@@ -246,6 +350,13 @@ namespace KinectShooter
                 // Scoreboard animation.
                 Storyboard sb = (Storyboard)this.FindResource("ScoreboardDisappearStoryboard");
                 sb.Begin();
+
+                // Close server connection.
+                if (this.client != null)
+                {
+                    this.client.EndReceive();
+                    this.client.MessageReceived -= callback_MessageReceived;
+                }
             }
         }
 
@@ -275,12 +386,21 @@ namespace KinectShooter
             this.players[3] = new Player { Status = ShotStatus.None, Score = Player4Score, Sights = new ControLib.SightsControl { SightsColor = (Brush)this.FindResource("Player4Color") } };
             this.players[4] = new Player { Status = ShotStatus.None, Score = Player5Score, Sights = new ControLib.SightsControl { SightsColor = (Brush)this.FindResource("Player5Color") } };
             this.players[5] = new Player { Status = ShotStatus.None, Score = Player6Score, Sights = new ControLib.SightsControl { SightsColor = (Brush)this.FindResource("Player6Color") } };
+            float size = (float)this.ActualWidth * 0.05f;
+            float sightsWidth = size * 0.1f;
+            float sightsClose = size * 0.5f;
+            float sightsInnerWidth = size * 0.2f;
             foreach (Player p in this.players)
             {
-                // Adds the player's sights to the canvas.
+                // Adds the player's sights to the canvas and adjust their size.
                 MainCanvas.Children.Add(p.Sights);
                 Canvas.SetLeft(p.Sights, -500);
                 Canvas.SetTop(p.Sights, -500);
+                p.Sights.Width = size;
+                p.Sights.Height = size;
+                p.Sights.SightsWidth = sightsWidth;
+                p.Sights.SightsClose = sightsClose;
+                p.Sights.SightsInnerWidth = sightsInnerWidth;
 
                 // Add fire callback.
                 p.Sights.FireAnimationStoryBoard.Completed += (s, a) => this.ShotEnded(p);

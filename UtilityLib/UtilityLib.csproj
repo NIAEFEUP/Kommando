@@ -50,6 +50,7 @@
     <Compile Include="Paddle.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TcpSocketClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ControLib\ControLib.csproj">
