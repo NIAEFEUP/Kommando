@@ -1,14 +1,106 @@
-﻿<Window x:Class="KinectShooter.MainWindow"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded" Unloaded="Window_Unloaded">
-
+        xmlns:ControLib="clr-namespace:ControLib;assembly=ControLib" x:Class="KinectShooter.MainWindow"
+        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded" Unloaded="Window_Unloaded" SizeChanged="Window_SizeChanged" KeyUp="Window_KeyUp">
+	<Window.Resources>
+        <SolidColorBrush x:Key="Player1Color" Color="#25ADDF"/>
+        <SolidColorBrush x:Key="Player2Color" Color="#b268d9"/>
+        <SolidColorBrush x:Key="Player3Color" Color="#8abd00"/>
+        <SolidColorBrush x:Key="Player4Color" Color="#ffa712"/>
+        <SolidColorBrush x:Key="Player5Color" Color="#f83a3a"/>
+        <SolidColorBrush x:Key="Player6Color" Color="#17a086"/>
+		<Storyboard x:Key="ScoreboardAppearStoryboard">
+            <DoubleAnimation 
+                Storyboard.TargetName="ScoreboardRectangle"
+                Storyboard.TargetProperty="(Rectangle.RenderTransform).(ScaleTransform.ScaleY)"
+                To="1.0"
+                Duration="0:0:1" />
+		</Storyboard>
+        <Storyboard x:Key="ScoreboardDisappearStoryboard">
+            <DoubleAnimation 
+                Storyboard.TargetName="ScoreboardRectangle"
+                Storyboard.TargetProperty="(Rectangle.RenderTransform).(ScaleTransform.ScaleY)"
+                To="0.0"
+                BeginTime="0:0:0.5"
+                Duration="0:0:1" />
+        </Storyboard>
+        <Storyboard x:Key="PlayerScoreAppearStoryboard">
+            <!--DoubleAnimation
+                Storyboard.TargetProperty="(ControLib:ScoreControl.RenderTransform).(ScaleTransform.ScaleY)"
+                To="1.0"
+                Duration="0:0:0.5" /-->
+            <DoubleAnimation
+                Storyboard.TargetProperty="(ControLib:ScoreControl.Opacity)"
+                To="1.0"
+                Duration="0:0:1" />
+        </Storyboard>
+        <Storyboard x:Key="PlayerScoreDisappearStoryboard">
+            <!--DoubleAnimation
+                Storyboard.TargetProperty="(ControLib:ScoreControl.RenderTransform).(ScaleTransform.ScaleY)"
+                To="0.0"
+                Duration="0:0:0.5" /-->
+            <DoubleAnimation
+                Storyboard.TargetProperty="(ControLib:ScoreControl.Opacity)"
+                To="0.0"
+                Duration="0:0:0.5" />
+        </Storyboard>
+    </Window.Resources>
     <Grid>
-        <Rectangle Stroke="Black">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="12*"/>
+        </Grid.RowDefinitions>
+        <Rectangle x:Name="ScoreboardRectangle" Fill="#FF131313" Panel.ZIndex="1">
+            <Rectangle.RenderTransform>
+                <ScaleTransform ScaleX="1" ScaleY="0" />
+            </Rectangle.RenderTransform>
+        </Rectangle>
+        <Rectangle Stroke="Black" Grid.RowSpan="2">
             <Rectangle.Fill>
                 <ImageBrush ImageSource="Images/background.jpg"/>
             </Rectangle.Fill>
         </Rectangle>
-        <Canvas x:Name="MainCanvas" ClipToBounds="True" Background="Black" />
+        <Canvas x:Name="MainCanvas" ClipToBounds="True" Background="Black" Grid.RowSpan="2"/>
+        <Grid x:Name="ScoreboardGrid" Grid.Column="0" Grid.Row="0" Panel.ZIndex="2" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <ControLib:ScoreControl x:Name="Player1Score" ScoreColor="{StaticResource ResourceKey=Player1Color}" ScoreContent="" Grid.Column="0" Opacity="0.0">
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player2Score" ScoreColor="{StaticResource ResourceKey=Player2Color}" ScoreContent="" Grid.Column="1" Opacity="0.0" >
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player3Score" ScoreColor="{StaticResource ResourceKey=Player3Color}" ScoreContent="" Grid.Column="2" Opacity="0.0" >
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player4Score" ScoreColor="{StaticResource ResourceKey=Player4Color}" ScoreContent="" Grid.Column="3" Opacity="0.0" >
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player5Score" ScoreColor="{StaticResource ResourceKey=Player5Color}" ScoreContent="" Grid.Column="4" Opacity="0.0" >
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player6Score" ScoreColor="{StaticResource ResourceKey=Player6Color}" ScoreContent="" Grid.Column="5" Opacity="0.0">
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+        </Grid>
     </Grid>
 </Window>

@@ -34,6 +34,14 @@ namespace Utility
             this.PaddleLeft = new Paddle();
         }
 
+        public float DamageTaken
+        {
+            get
+            {
+                return this.BodyParts.Count(b => b.Value.State == BodyPartState.Hit) / (float)this.BodyParts.Count();
+            }
+        }
+
         public void UpdateSkeleton(Skeleton skeleton, KinectSensor sensor, float width, float height)
         {
             // The skeleton is updated if not null.
@@ -118,11 +126,33 @@ namespace Utility
                     convertedJoints[JointType.Head] - head * memberWidth * 2.0f,
                     memberWidth * 4.0f);
 
-                // Right paddle.
+                // Right paddle (shield).
                 Vector2 handRight = convertedJoints[JointType.HandRight] - convertedJoints[JointType.WristRight];
                 handRight = handRight / handRight.Length;
                 Vector2 centerRight = convertedJoints[JointType.WristRight] + handRight * memberWidth * 2.0f;
                 this.PaddleRight.Shape.Points = this.RegularPolygonToPointCollection(convertedJoints[JointType.HandRight], memberWidth * 4.0f, 8);
+
+                // Left paddle (sword).
+                Vector2 handLeft = convertedJoints[JointType.WristLeft] - convertedJoints[JointType.HandLeft];
+                handLeft = handLeft / handLeft.Length;
+                Vector2 normalHandLeft = new Vector2(-handLeft.Y, handLeft.X);
+                Vector2 handCenter = convertedJoints[JointType.WristLeft];
+                float halfWidth = memberWidth * 0.4f;
+                PointCollection points = this.PaddleLeft.Shape.Points;
+                points.Clear();
+                points.Add((handCenter + normalHandLeft * memberWidth * 1.5f + handLeft * halfWidth).ConvertVector2ToPoint());
+                points.Add((handCenter + normalHandLeft * memberWidth * 1.5f - handLeft * halfWidth).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth * 0.5f - handLeft * halfWidth).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth * 0.5f - handLeft * memberWidth * 1.5f).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth - handLeft * memberWidth * 1.5f).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth - handLeft * halfWidth).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth * 12.0f - handLeft * halfWidth).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth * 13.0f).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth * 12.0f + handLeft * halfWidth).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth + handLeft * halfWidth).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth + handLeft * memberWidth * 1.5f).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth * 0.5f + handLeft * memberWidth * 1.5f).ConvertVector2ToPoint());
+                points.Add((handCenter - normalHandLeft * memberWidth * 0.5f + handLeft * halfWidth).ConvertVector2ToPoint());
             }
             // In this case the skeleton is moved cleared.
             else
@@ -136,7 +166,7 @@ namespace Utility
             }
         }
 
-        private PointCollection RegularPolygonToPointCollection(Vector2 center, float radius, int sections)
+        public PointCollection RegularPolygonToPointCollection(Vector2 center, float radius, int sections)
         {
             PointCollection collection = new PointCollection();
             for (int i = 0; i < sections; ++i)

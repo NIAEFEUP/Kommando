@@ -16,6 +16,7 @@ namespace Utility
     public class BodyPart
     {
         public static readonly TimeSpan AnimationDuration = new TimeSpan(0, 0, 2);
+        private BodyPartState state;
 
         public BodyPart()
         {
@@ -28,6 +29,7 @@ namespace Utility
                 Fill = Brushes.Black,
                 Stroke = Brushes.White
             };
+            this.state = BodyPartState.PreGame;
 
             // Sets up the animation for the body part.
             this.FillAnimation = new Storyboard();
@@ -47,6 +49,7 @@ namespace Utility
             {
                 // Stop animation.
                 this.FillAnimation.Stop();
+                this.state = value;
                 switch (value)
                 {
                     case BodyPartState.Hit:
@@ -64,6 +67,10 @@ namespace Utility
                         this.FillAnimation.Begin();
                         break;
                 }
+            }
+            get
+            {
+                return this.state;
             }
         }
     }

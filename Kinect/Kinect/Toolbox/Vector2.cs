@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 
 namespace Kinect.Toolbox
 {
@@ -106,6 +107,15 @@ namespace Kinect.Toolbox
         public static Vector2 operator +(Vector2 left, Vector2 right)
         {
             return new Vector2(left.X + right.X, left.Y + right.Y);
+        }
+
+        /// <summary>
+        /// Converts a vector to an aproximate point.
+        /// </summary>
+        /// <returns>Converted point.</returns>
+        public Point ConvertVector2ToPoint()
+        {
+            return new Point((int)this.X, (int)this.Y);
         }
     }
 }

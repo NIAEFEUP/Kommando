@@ -15,10 +15,12 @@ namespace Utility
 
     public class Paddle
     {
-        public static readonly TimeSpan AnimationDuration = new TimeSpan(0, 0, 2);
-        public static readonly TimeSpan HitAnimationDuration = new TimeSpan(0, 0, 0, 500);
+        public static readonly TimeSpan AppearAnimationDuration = new TimeSpan(0, 0, 1);
+        public static readonly TimeSpan HitAnimationDuration = new TimeSpan(0, 0, 0, 0, 600);
+        private PaddleState state;
 
         public Storyboard FillAnimation { get; private set; }
+
         public Storyboard AppearAnimation { get; private set; }
 
         public Polygon Shape { get; private set; }
@@ -30,26 +32,27 @@ namespace Utility
             {
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Top,
-                StrokeThickness = 4.0,
-                Opacity = 0.0,
+                StrokeThickness = 3.0,
+                Opacity = 1.0,
                 Fill = Brushes.Orange,
                 Stroke = Brushes.Black
             };
-
-            // Sets up the hit animation.
-            this.FillAnimation = new Storyboard();
-            ColorAnimation ca = new ColorAnimation(Colors.Red, new Duration(Paddle.HitAnimationDuration));
-            ca.AutoReverse = true;
-            Storyboard.SetTarget(ca, this.Shape);
-            Storyboard.SetTargetProperty(ca, new PropertyPath("Fill.Color", new object[] { Polygon.FillProperty, SolidColorBrush.ColorProperty }));
-            this.FillAnimation.Children.Add(ca);
+            this.state = PaddleState.PreGame;
 
             // Sets up the appear animation.
             this.AppearAnimation = new Storyboard();
-            DoubleAnimation da = new DoubleAnimation(1.0, new Duration(Paddle.AnimationDuration));
+            DoubleAnimation da = new DoubleAnimation(1.0, new Duration(Paddle.AppearAnimationDuration));
             Storyboard.SetTarget(da, this.Shape);
             Storyboard.SetTargetProperty(da, new PropertyPath(Polygon.OpacityProperty));
             this.AppearAnimation.Children.Add(da);
+
+            // Sets up the hit animation.
+            this.FillAnimation = new Storyboard();
+            ColorAnimation ca = new ColorAnimation(Colors.Red, Colors.Orange, new Duration(Paddle.HitAnimationDuration));
+            Storyboard.SetTarget(ca, this.Shape);
+            Storyboard.SetTargetProperty(ca, new PropertyPath("Fill.Color", new object[] { Polygon.FillProperty, SolidColorBrush.ColorProperty }));
+            this.FillAnimation.Children.Add(ca);
+            this.State = PaddleState.PreGame;
         }
 
         public PaddleState State
@@ -58,7 +61,8 @@ namespace Utility
             {
                 // Stop animation.
                 this.FillAnimation.Stop();
-                ColorAnimation ca = ((ColorAnimation)this.FillAnimation.Children[0]);
+                this.AppearAnimation.Stop();
+                this.state = value == PaddleState.Hit ? this.state : value;
                 DoubleAnimation da = ((DoubleAnimation)this.AppearAnimation.Children[0]);
                 switch (value)
                 {
@@ -76,6 +80,10 @@ namespace Utility
                         this.AppearAnimation.Begin();
                         break;
                 }
+            }
+            get
+            {
+                return this.state;
             }
         }
     }

@@ -1,4 +1,8 @@
 ﻿using Microsoft.Kinect;
+using System;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace Kinect.Toolbox
 {
@@ -83,6 +87,83 @@ namespace Kinect.Toolbox
             }
 
             return new Vector2(x / width, y / height);
+        }
+
+        /// <summary>
+        /// Detects collisions between two polygons.
+        /// </summary>
+        /// <param name="p1">First polygon</param>
+        /// <param name="p2">Second polygon</param>
+        /// <returns>True if polygons are colliding, False otherwise</returns>
+        public static bool IsPolygonColliding(Polygon p1, Polygon p2)
+        {
+            // Get the points of each polygon.
+            PointCollection area1 = p1.Points;
+            PointCollection area2 = p2.Points;
+
+            // Check for intersections between the polygons' edges.
+            for (int i = 0; i < area1.Count; i++)
+            {
+                for (int j = 0; j < area2.Count; j++)
+                {
+                    if (IsSegmentIntersecting(area1[i], area1[(i + 1) % area1.Count], area2[j], area2[(j + 1) % area2.Count]))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            // Check for vertexes of one polygon inside the other.
+            return IsPointInCollection(area1, area2[0]) || IsPointInCollection(area2, area1[0]);
+        }
+
+        /// <summary>
+        /// Computes the determinant of two vectors.
+        /// </summary>
+        /// <param name="vector1">First vector</param>
+        /// <param name="vector2">Second vector</param>
+        /// <returns>Vector's determinant.</returns>
+        private static double ComputeDterminant(Vector vector1, Vector vector2)
+        {
+            return vector1.X * vector2.Y - vector1.Y * vector2.X;
+        }
+
+        /// <summary>
+        /// Determines if a point is contained inside an area.
+        /// </summary>
+        /// <param name="area">Area to check</param>
+        /// <param name="point">Point to check</param>
+        /// <returns>True if the point is contained inside the area, false otherwise</returns>
+        private static bool IsPointInCollection(PointCollection area, Point point)
+        {
+            Point start = new Point(int.MinValue, int.MinValue);
+            int intersections = 0;
+
+            for (int i = 0; i < area.Count; i++)
+            {
+                if (IsSegmentIntersecting(area[i], area[(i + 1) % area.Count], start, point))
+                {
+                    intersections++;
+                }
+            }
+
+            return (intersections % 2) == 1;
+        }
+
+        /// <summary>
+        /// Determines if two line segments intersect each other.
+        /// </summary>
+        /// <param name="seg1Start">First point of the first segment</param>
+        /// <param name="seg1End">Second point of the second segment</param>
+        /// <param name="seg2Start">First point of the second segment</param>
+        /// <param name="seg2End">Second point of the second segment</param>
+        /// <returns></returns>
+        private static bool IsSegmentIntersecting(Point seg1Start, Point seg1End, Point seg2Start, Point seg2End)
+        {
+            double determinant = ComputeDterminant(seg1End - seg1Start, seg2Start - seg2End);
+            double t = ComputeDterminant(seg2Start - seg1Start, seg2Start - seg2End) / determinant;
+            double u = ComputeDterminant(seg1End - seg1Start, seg2Start - seg1Start) / determinant;
+            return (t >= 0) && (u >= 0) && (t <= 1) && (u <= 1);
         }
     }
 }

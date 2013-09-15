@@ -48,9 +48,14 @@
     <Compile Include="BodyPart.cs" />
     <Compile Include="HitSkeleton.cs" />
     <Compile Include="Paddle.cs" />
+    <Compile Include="Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ControLib\ControLib.csproj">
+      <Project>{44d250a5-6d50-4bf0-ac6b-413cdbecc361}</Project>
+      <Name>ControLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Kinect\Kinect.csproj">
       <Project>{7041af5b-ad01-4e03-ad77-1202a3befe12}</Project>
       <Name>Kinect</Name>
