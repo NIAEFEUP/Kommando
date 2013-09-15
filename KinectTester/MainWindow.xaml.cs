@@ -95,6 +95,8 @@ namespace KinectTester
                 {
                     if (i == 5)
                         sb.Append("-1,-1,-1,-1");
+                    else if(i == 3)
+                        sb.Append("0,0,0,20000,");
                     else
                         sb.Append("-1,-1,-1,-1,");
                 }
@@ -124,6 +126,8 @@ namespace KinectTester
                 {
                     if (i == 5)
                         sb.Append("-1,-1,-1,-1");
+                    else if (i == 3)
+                        sb.Append("0,0,0,20000,");
                     else
                         sb.Append("-1,-1,-1,-1,");
                 }

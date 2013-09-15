@@ -1,19 +1,19 @@
-﻿using Kinect.Gestures;
+﻿using ControLib;
+using Kinect.Gestures;
 using Kinect.Gestures.Waves;
 using Kinect.Sensor;
+using Kinect.Toolbox;
 using Microsoft.Kinect;
 using System;
+using System.Linq;
+using System.Media;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using Utility;
 using System.Windows.Shapes;
-using Kinect.Toolbox;
-using ControLib;
-using System.Threading;
-using System.Linq;
-using System.Text;
+using Utility;
 
 namespace KinectShooter
 {
@@ -23,16 +23,13 @@ namespace KinectShooter
     public partial class MainWindow : Window
     {
         private Storyboard backgroundAnimation;
+        private SoundPlayer backgroundMusic;
+        private TcpSocketClient client;
         private KinectSensorController controller;
         private HitSkeleton hitSkeleton;
-        private int skeletonId = -1;
         private Player[] players;
-        private TcpSocketClient client;
-
-        // REMOVE
-        private float xP = 0.0f;
-        private float yP = 0.0f;
-        // END REMOVE
+        private int skeletonId = -1;
+        private bool endGame = false;
 
         public MainWindow()
         {
@@ -53,209 +50,6 @@ namespace KinectShooter
             }
         }
 
-        public void RemovePlayer(int index)
-        {
-            Player p = this.players[index];
-            p.PlayerActive = false;
-            p.Score.BeginStoryboard((Storyboard)this.FindResource("PlayerScoreDisappearStoryboard"));
-            Canvas.SetLeft(p.Sights, -500);
-            Canvas.SetTop(p.Sights, -500);
-        }
-
-        public void MovePlayer(int index, float x, float y)
-        {
-            Player p = this.players[index];
-            if (p.PlayerActive)
-            {
-                float width = (float)this.ActualWidth * x;
-                float height = (float)this.ActualHeight * y;
-                float sightsWidth = (float)p.Sights.ActualWidth * 0.5f;
-                float sightsHeight = (float)p.Sights.ActualHeight * 0.5f;
-                p.X = width;
-                p.Y = height;
-                Canvas.SetLeft(p.Sights, width - sightsWidth);
-                Canvas.SetTop(p.Sights, height - sightsHeight);
-            }
-        }
-
-        public void FirePlayer(int index)
-        {
-            Player p = this.players[index];
-            if (p.PlayerActive)
-            {
-                p.Sights.Fire();
-            }
-        }
-
-        public void ShotEnded(Player p)
-        {
-            // Locking here prevents concurrence from the network listener.
-            lock (this.players)
-            {
-                if (p.PlayerActive)
-                {
-                    // Build bullet polygon.
-                    Polygon pol = new Polygon();
-                    pol.Points = hitSkeleton.RegularPolygonToPointCollection(new Vector2(p.X, p.Y), (float)p.Sights.ActualWidth * 0.5f, 15);
-
-                    // Check for weapon hits.
-                    if (Tools.IsPolygonColliding(pol, hitSkeleton.PaddleRight.Shape))
-                    {
-                        hitSkeleton.PaddleRight.State = PaddleState.Hit;
-                        SetFlyout("DEFEND!", p.X, p.Y, Brushes.SlateBlue);
-                        p.Status = ShotStatus.Miss;
-                    }
-                    else if (Tools.IsPolygonColliding(pol, hitSkeleton.PaddleLeft.Shape))
-                    {
-                        hitSkeleton.PaddleLeft.State = PaddleState.Hit;
-                        SetFlyout("DEFEND!", p.X, p.Y, Brushes.SlateBlue);
-                        p.Status = ShotStatus.Miss;
-                    }
-                    // Possible body part hits.
-                    else
-                    {
-                        var hitParts = hitSkeleton.BodyParts.Where(pa => Tools.IsPolygonColliding(pa.Value.Shape, pol));
-                        BodyPart part = hitParts.FirstOrDefault(pa => pa.Value.State == BodyPartState.NotHit).Value;
-                        
-                        // Only one part may be hit per shot, but precedence
-                        // is always given to parts that haven't been shot before.
-                        if(part != null)
-                        {
-                            part.State = BodyPartState.Hit;
-                            SetFlyout("HIT!", p.X, p.Y, Brushes.SlateBlue);
-                            p.Status = ShotStatus.Hit;
-                        }
-                        // A part previously hit was hit again.
-                        else if (hitParts.Count() > 0)
-                        {
-                            SetFlyout("HIT!", p.X, p.Y, Brushes.SlateBlue);
-                            p.Status = ShotStatus.Hit;
-                        }
-                        // Nothing was hit.
-                        else
-                        {
-                            SetFlyout("MISSED!", p.X, p.Y, Brushes.SlateBlue);
-                            p.Status = ShotStatus.Miss;
-                        }
-                    }
-
-                    // Build response to server.
-                    StringBuilder response = new StringBuilder("");
-                    foreach (Player pl in this.players)
-                    {
-                        // Current shot player.
-                        if (p == pl)
-                        {
-                            switch (pl.Status)
-                            {
-                                case ShotStatus.Hit:
-                                    response.Append("2,");
-                                    break;
-                                case ShotStatus.Miss:
-                                    response.Append("1,");
-                                    break;
-                                case ShotStatus.None:
-                                    response.Append("0,");
-                                    break;
-                            }
-                            pl.Status = ShotStatus.None;
-                        }
-                        // Other players.
-                        else
-                        {
-                            // If player is active.
-                            if (pl.PlayerActive)
-                            {
-                                response.Append("0,");
-                            }
-                            // If player is not active.
-                            else
-                            {
-                                response.Append("-1,");
-                            }
-                        }
-                    }
-
-                    // Append player health to response and send it.
-                    response.Append(hitSkeleton.DamageTaken);
-                    client.BeginSend(response.ToString());
-                }
-            }
-        }
-
-        private void SetFlyout(string text, float x, float y, Brush color)
-        {
-            FlyoutTextControl flyout = new FlyoutTextControl
-            {
-                FlyoutTextColor = color,
-                FlyoutTextContent = text,
-                FlyoutTextSize = (float)this.ActualHeight * 0.05f
-            };
-            MainCanvas.Children.Add(flyout);
-            flyout.X = x;
-            flyout.Y = y;
-            Canvas.SetLeft(flyout, x - flyout.ActualWidth * 0.5f);
-            Canvas.SetTop(flyout, y - flyout.ActualHeight * 0.5f);
-            flyout.FlyoutAnimation.Completed += (s, a) => MainCanvas.Children.Remove(flyout);
-            flyout.Flyout();
-        }
-
-        public void callback_MessageReceived(TcpSocketClient client, string message)
-        {
-            // Data can only be processed if the player is alive.
-            if (hitSkeleton.DamageTaken >= 1.0f)
-            {
-                return;
-            }
-
-            // Check for handshake communication.
-            if (message == "whoareyou")
-            {
-                client.BeginSend("v");
-                return;
-            }
-
-            // Checks if an invoke is required.
-            if (MainCanvas.Dispatcher.CheckAccess())
-            {
-                string[] tokens = message.Split(',');
-                lock (this.players)
-                {
-                    for (int i = 0; i < players.Length; ++i)
-                    {
-                        Player p = this.players[i];
-                        float x = float.Parse(tokens[i * 4]);
-                        float y = float.Parse(tokens[i * 4 + 1]);
-                        int shot = int.Parse(tokens[i * 4 + 2]);
-                        string score = tokens[i * 4 + 3];
-                        p.Score.ScoreContent = score;
-                        MovePlayer(i, x, y);
-
-                        // Player exited.
-                        if (shot == -1 && p.PlayerActive)
-                        {
-                            RemovePlayer(i);
-                        }
-                        // Player entered.
-                        else if (shot != -1 && !p.PlayerActive)
-                        {
-                            AddPlayer(i, score);
-                        }
-
-                        // A player shot.
-                        if (shot == 1)
-                        {
-                            FirePlayer(i);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                MainCanvas.Dispatcher.Invoke(new Action(() => callback_MessageReceived(client, message)));
-            }
-        }
-
         /// <summary>
         /// Handles gesture recognized events.
         /// </summary>
@@ -264,9 +58,10 @@ namespace KinectShooter
         public void callback_KinectGestureRecognized(object sender, KinectGestureEventArgs args)
         {
             // Engage animations.
-            if (args.GestureType == KinectGestureType.WaveRightHand && this.skeletonId == -1)
+            if (args.GestureType == KinectGestureType.WaveRightHand && this.skeletonId == -1 && !endGame)
             {
                 this.skeletonId = args.TrackingId;
+                this.endGame = false;
                 this.controller.StartTrackingSkeleton(this.skeletonId);
                 foreach (BodyPart part in hitSkeleton.BodyParts.Values)
                 {
@@ -291,29 +86,91 @@ namespace KinectShooter
                 this.client.MessageReceived += callback_MessageReceived;
                 this.client.BeginReceive();
             }
-            /*// Disengage animations (to remove later in production).
-            else if (args.GestureType == KinectGestureType.WaveLeftHand && this.skeletonId != -1)
+        }
+
+        public void callback_MessageReceived(TcpSocketClient client, string message)
+        {
+            // Check for handshake communication.
+            if (message == "whoareyou")
             {
-                this.skeletonId = -1;
-                this.controller.StopTrackingSkeleton();
-                foreach (BodyPart part in hitSkeleton.BodyParts.Values)
+                client.BeginSend("v");
+                return;
+            }
+
+            // Checks if an invoke is required.
+            if (MainCanvas.Dispatcher.CheckAccess())
+            {
+                // No changes after endgame.
+                if (this.endGame)
                 {
-                    part.State = BodyPartState.PreGame;
+                    return;
                 }
 
-                // Paddle animation.
-                this.hitSkeleton.PaddleRight.State = PaddleState.PreGame;
-                this.hitSkeleton.PaddleLeft.State = PaddleState.PreGame;
+                string[] tokens = message.Split(',');
+                lock (this.players)
+                {
+                    // No longer accepting updates after player dying.
+                    if (hitSkeleton.DamageTaken >= 1.0f && !endGame)
+                    {
+                        float[] scores = new float[players.Length];
+                        for (int i = 0; i < players.Length; ++i)
+                        {
+                            players[i].Score.ScoreContent = tokens[i * 4 + 3];
+                            scores[i] = float.Parse(tokens[i * 4 + 3]);
+                            if (scores[i] == -1)
+                            {
+                                RemovePlayer(i);
+                            }
+                        }
+                        int index = scores.ToList().IndexOf(scores.Max());
+                        Player p = players[index];
+                        endGame = true;
 
-                // Background animation.
-                this.backgroundAnimation.Stop();
-                ((ColorAnimation)this.backgroundAnimation.Children[0]).To = Colors.Black;
-                this.backgroundAnimation.Begin();
+                        // Animate victory screen.
+                        Storyboard vicStoryboard = (Storyboard)this.FindResource("VictoryStoryboard");
+                        Storyboard vicImageStoryboard = (Storyboard)this.FindResource("VictoryImageStoryboard");
+                        vicImageStoryboard.Completed += callback_VictoryStoryboardCompleted;
+                        vicStoryboard.Completed += (s, a) => this.endGame = false;
+                        VictoryBackgroundRectangle.Fill = p.Sights.SightsColor;
+                        VictoryBackgroundRectangle.BeginStoryboard(vicStoryboard);
+                        VictoryImageRectangle.BeginStoryboard(vicImageStoryboard);
+                    }
+                    else if(!endGame)
+                    {
+                        for (int i = 0; i < players.Length; ++i)
+                        {
+                            Player p = this.players[i];
+                            float x = float.Parse(tokens[i * 4]);
+                            float y = float.Parse(tokens[i * 4 + 1]);
+                            int shot = int.Parse(tokens[i * 4 + 2]);
+                            string score = tokens[i * 4 + 3];
+                            p.Score.ScoreContent = score;
+                            MovePlayer(i, x, y);
 
-                // Scoreboard animation.
-                Storyboard sb = (Storyboard)this.FindResource("ScoreboardDisappearStoryboard");
-                sb.Begin();
-            }*/
+                            // Player exited.
+                            if (shot == -1 && p.PlayerActive)
+                            {
+                                RemovePlayer(i);
+                            }
+                            // Player entered.
+                            else if (shot != -1 && !p.PlayerActive)
+                            {
+                                AddPlayer(i, score);
+                            }
+
+                            // A player shot.
+                            if (shot == 1)
+                            {
+                                FirePlayer(i);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MainCanvas.Dispatcher.Invoke(new Action(() => callback_MessageReceived(client, message)));
+            }
         }
 
         /// <summary>
@@ -360,6 +217,175 @@ namespace KinectShooter
             }
         }
 
+        public void FirePlayer(int index)
+        {
+            Player p = this.players[index];
+            if (p.PlayerActive)
+            {
+                p.Sights.Fire();
+            }
+        }
+
+        public void MovePlayer(int index, float x, float y)
+        {
+            Player p = this.players[index];
+            if (p.PlayerActive)
+            {
+                float width = (float)this.ActualWidth * x;
+                float height = (float)this.ActualHeight * y;
+                float sightsWidth = (float)p.Sights.ActualWidth * 0.5f;
+                float sightsHeight = (float)p.Sights.ActualHeight * 0.5f;
+                p.X = width;
+                p.Y = height;
+                Canvas.SetLeft(p.Sights, width - sightsWidth);
+                Canvas.SetTop(p.Sights, height - sightsHeight);
+            }
+        }
+
+        public void RemovePlayer(int index)
+        {
+            Player p = this.players[index];
+            p.PlayerActive = false;
+            p.Score.BeginStoryboard((Storyboard)this.FindResource("PlayerScoreDisappearStoryboard"));
+            Canvas.SetLeft(p.Sights, -500);
+            Canvas.SetTop(p.Sights, -500);
+        }
+
+        public void ShotEnded(Player p)
+        {
+            // Locking here prevents concurrence from the network listener.
+            lock (this.players)
+            {
+                if (p.PlayerActive && hitSkeleton.DamageTaken < 1.0)
+                {
+                    // Build bullet polygon.
+                    Polygon pol = new Polygon();
+                    pol.Points = hitSkeleton.RegularPolygonToPointCollection(new Vector2(p.X, p.Y), (float)p.Sights.ActualWidth * 0.5f, 15);
+
+                    // Check for weapon hits.
+                    if (Tools.IsPolygonColliding(pol, hitSkeleton.PaddleRight.Shape))
+                    {
+                        hitSkeleton.PaddleRight.State = PaddleState.Hit;
+                        SetFlyout("DEFEND!", p.X, p.Y, Brushes.SlateBlue);
+                        p.Status = ShotStatus.Miss;
+                    }
+                    else if (Tools.IsPolygonColliding(pol, hitSkeleton.PaddleLeft.Shape))
+                    {
+                        hitSkeleton.PaddleLeft.State = PaddleState.Hit;
+                        SetFlyout("DEFEND!", p.X, p.Y, Brushes.SlateBlue);
+                        p.Status = ShotStatus.Miss;
+                    }
+                    // Possible body part hits.
+                    else
+                    {
+                        var hitParts = hitSkeleton.BodyParts.Where(pa => Tools.IsPolygonColliding(pa.Value.Shape, pol));
+                        BodyPart part = hitParts.FirstOrDefault(pa => pa.Value.State == BodyPartState.NotHit).Value;
+
+                        // Only one part may be hit per shot, but precedence
+                        // is always given to parts that haven't been shot before.
+                        if (part != null)
+                        {
+                            part.State = BodyPartState.Hit;
+                            SetFlyout("HIT!", p.X, p.Y, Brushes.SlateBlue);
+                            p.Status = ShotStatus.Hit;
+                        }
+                        // A part previously hit was hit again.
+                        else if (hitParts.Count() > 0)
+                        {
+                            SetFlyout("HIT!", p.X, p.Y, Brushes.SlateBlue);
+                            p.Status = ShotStatus.Hit;
+                        }
+                        // Nothing was hit.
+                        else
+                        {
+                            SetFlyout("MISSED!", p.X, p.Y, Brushes.SlateBlue);
+                            p.Status = ShotStatus.Miss;
+                        }
+                    }
+
+                    // Build response to server.
+                    StringBuilder response = new StringBuilder("");
+                    foreach (Player pl in this.players)
+                    {
+                        // Current shot player.
+                        if (p == pl)
+                        {
+                            switch (pl.Status)
+                            {
+                                case ShotStatus.Hit:
+                                    response.Append("2,");
+                                    break;
+
+                                case ShotStatus.Miss:
+                                    response.Append("1,");
+                                    break;
+
+                                case ShotStatus.None:
+                                    response.Append("0,");
+                                    break;
+                            }
+                            pl.Status = ShotStatus.None;
+                        }
+                        // Other players.
+                        else
+                        {
+                            // If player is active.
+                            if (pl.PlayerActive)
+                            {
+                                response.Append("0,");
+                            }
+                            // If player is not active.
+                            else
+                            {
+                                response.Append("-1,");
+                            }
+                        }
+                    }
+
+                    // Append player health to response and send it.
+                    float damage = hitSkeleton.DamageTaken;
+                    response.Append(damage);
+                    client.BeginSend(response.ToString());
+                }
+            }
+        }
+
+        private void callback_VictoryStoryboardCompleted(object sender, EventArgs e)
+        {
+            Storyboard vicImageStoryboard = (Storyboard)this.FindResource("VictoryImageStoryboard");
+            vicImageStoryboard.Completed -= callback_VictoryStoryboardCompleted;
+            callback_TrackedSkeletonReady(null);
+        }
+
+        private void dispatcherTimer_FlyoutUpdate(object sender, EventArgs e)
+        {
+            foreach (UIElement elem in MainCanvas.Children)
+            {
+                FlyoutTextControl flyout = elem as FlyoutTextControl;
+                if (flyout != null)
+                {
+                    Canvas.SetLeft(flyout, flyout.X - flyout.ActualWidth * 0.5f);
+                    Canvas.SetTop(flyout, flyout.Y - flyout.ActualHeight * 0.5f);
+                }
+            }
+        }
+
+        private void SetFlyout(string text, float x, float y, Brush color)
+        {
+            FlyoutTextControl flyout = new FlyoutTextControl
+            {
+                FlyoutTextColor = color,
+                FlyoutTextContent = text,
+                FlyoutTextSize = (float)this.ActualHeight * 0.05f
+            };
+            MainCanvas.Children.Add(flyout);
+            flyout.X = x;
+            flyout.Y = y;
+            Canvas.SetLeft(flyout, x - flyout.ActualWidth * 0.5f);
+            Canvas.SetTop(flyout, y - flyout.ActualHeight * 0.5f);
+            flyout.FlyoutAnimation.Completed += (s, a) => MainCanvas.Children.Remove(flyout);
+            flyout.Flyout();
+        }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Binds the skeleton representation to the canvas.
@@ -370,6 +396,11 @@ namespace KinectShooter
             }
             MainCanvas.Children.Add(this.hitSkeleton.PaddleRight.Shape);
             MainCanvas.Children.Add(this.hitSkeleton.PaddleLeft.Shape);
+
+            // Load background music.
+            backgroundMusic = new SoundPlayer("Sounds/background.wav");
+            backgroundMusic.Load();
+            backgroundMusic.PlayLooping();
 
             // Setup background animation.
             this.backgroundAnimation = new Storyboard();
@@ -409,7 +440,7 @@ namespace KinectShooter
             // Setup timed event to update flyout text positions.
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_FlyoutUpdate);
-            dispatcherTimer.Interval = new TimeSpan(0,0,0,0,10);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
             dispatcherTimer.Start();
 
             // Sets up and starts the sensor.
@@ -417,30 +448,7 @@ namespace KinectShooter
             controller.TrackedSkeletonReady += new KinectSensorController.TrackedSkeletonReadyHandler(callback_TrackedSkeletonReady);
             controller.Gestures.KinectGestureRecognized += new EventHandler<KinectGestureEventArgs>(callback_KinectGestureRecognized);
             controller.Gestures.AddGesture(new KinectGestureWaveRightHand());
-            controller.Gestures.AddGesture(new KinectGestureWaveLeftHand());
             controller.StartSensor();
-        }
-
-        private void dispatcherTimer_FlyoutUpdate(object sender, EventArgs e)
-        {
-            foreach (UIElement elem in MainCanvas.Children)
-            {
-                FlyoutTextControl flyout = elem as FlyoutTextControl;
-                if (flyout != null)
-                {
-                    Canvas.SetLeft(flyout, flyout.X - flyout.ActualWidth * 0.5f);
-                    Canvas.SetTop(flyout, flyout.Y - flyout.ActualHeight * 0.5f);
-                }
-            }
-        }
-
-        private void Window_Unloaded(object sender, RoutedEventArgs e)
-        {
-            // Stops the sensor if it's still running.
-            if (this.controller.Sensor.IsRunning)
-            {
-                this.controller.StopSensor();
-            }
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -463,40 +471,12 @@ namespace KinectShooter
             }
         }
 
-        // REMOVE
-        private void Window_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
-            switch (e.Key)
+            // Stops the sensor if it's still running.
+            if (this.controller.Sensor.IsRunning)
             {
-                case System.Windows.Input.Key.Space:
-                    this.AddPlayer(0, "0");
-                    break;
-                case System.Windows.Input.Key.Q:
-                    this.RemovePlayer(0);
-                    break;
-                case System.Windows.Input.Key.Left:
-                    if (xP > 0.0f)
-                        xP -= 0.1f;
-                    this.MovePlayer(0, xP, yP);
-                    break;
-                case System.Windows.Input.Key.Right:
-                    if (xP < 1.0f)
-                        xP += 0.1f;
-                    this.MovePlayer(0, xP, yP);
-                    break;
-                case System.Windows.Input.Key.Up:
-                    if (yP > 0.0f)
-                        yP -= 0.1f;
-                    this.MovePlayer(0, xP, yP);
-                    break;
-                case System.Windows.Input.Key.Down:
-                    if (yP < 1.0f)
-                        yP += 0.1f;
-                    this.MovePlayer(0, xP, yP);
-                    break;
-                case System.Windows.Input.Key.F:
-                    this.FirePlayer(0);
-                    break;
+                this.controller.StopSensor();
             }
         }
     }
