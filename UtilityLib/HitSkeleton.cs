@@ -38,7 +38,7 @@ namespace Utility
         {
             get
             {
-                return this.BodyParts.Count(b => b.Value.State == BodyPartState.Hit) / (float)this.BodyParts.Count();
+                return this.BodyParts.Count(b => b.Value.State == BodyPartState.Hit) / ((float)this.BodyParts.Count() - 2);
             }
         }
 

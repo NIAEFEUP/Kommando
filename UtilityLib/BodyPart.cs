@@ -10,7 +10,8 @@ namespace Utility
     {
         PreGame,
         NotHit,
-        Hit
+        Hit,
+        Armor,
     }
 
     public class BodyPart
@@ -53,17 +54,22 @@ namespace Utility
                 switch (value)
                 {
                     case BodyPartState.Hit:
-                        ((ColorAnimation)this.FillAnimation.Children[0]).To = Colors.Red;
+                        ((ColorAnimation)this.FillAnimation.Children[0]).To = Color.FromRgb(0xFF, 0x19, 0x19);
                         this.FillAnimation.Begin();
                         break;
 
                     case BodyPartState.NotHit:
-                        ((ColorAnimation)this.FillAnimation.Children[0]).To = Colors.SkyBlue;
+                        ((ColorAnimation)this.FillAnimation.Children[0]).To = Colors.RoyalBlue;
                         this.FillAnimation.Begin();
                         break;
 
                     case BodyPartState.PreGame:
                         ((ColorAnimation)this.FillAnimation.Children[0]).To = Colors.Black;
+                        this.FillAnimation.Begin();
+                        break;
+
+                    case BodyPartState.Armor:
+                        ((ColorAnimation)this.FillAnimation.Children[0]).To = Colors.Orange;
                         this.FillAnimation.Begin();
                         break;
                 }
