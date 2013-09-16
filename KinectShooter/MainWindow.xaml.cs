@@ -246,13 +246,13 @@ namespace KinectShooter
                     if (Tools.IsPolygonColliding(pol, hitSkeleton.PaddleRight.Shape))
                     {
                         hitSkeleton.PaddleRight.State = PaddleState.Hit;
-                        SetFlyout("DEFEND!", pX, pY, Brushes.SlateBlue);
+                        SetFlyout("DEFEND!", pX, pY, Brushes.MidnightBlue);
                         p.Status = ShotStatus.Miss;
                     }
                     else if (Tools.IsPolygonColliding(pol, hitSkeleton.PaddleLeft.Shape))
                     {
                         hitSkeleton.PaddleLeft.State = PaddleState.Hit;
-                        SetFlyout("DEFEND!", pX, pY, Brushes.SlateBlue);
+                        SetFlyout("DEFEND!", pX, pY, Brushes.MidnightBlue);
                         p.Status = ShotStatus.Miss;
                     }
                     // Possible body part hits.
@@ -269,13 +269,13 @@ namespace KinectShooter
                         if (part != null)
                         {
                             part.State = BodyPartState.Hit;
-                            SetFlyout("HIT!", pX, pY, Brushes.Red);
+                            SetFlyout("HIT!", pX, pY, Brushes.MidnightBlue);
                             p.Status = ShotStatus.Hit;
                         }
                         // A part previously hit was hit again.
                         else if (hitParts.Count() > 0)
                         {
-                            SetFlyout("HIT!", pX, pY, Brushes.Red);
+                            SetFlyout("HIT!", pX, pY, Brushes.MidnightBlue);
                             p.Status = ShotStatus.Hit;
                         }
                         // Nothing was hit.
