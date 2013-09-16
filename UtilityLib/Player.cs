@@ -27,6 +27,7 @@ namespace Utility
     {
         None,
         Hit,
-        Miss
+        Miss,
+        Defend
     }
 }

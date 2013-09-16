@@ -247,13 +247,13 @@ namespace KinectShooter
                     {
                         hitSkeleton.PaddleRight.State = PaddleState.Hit;
                         SetFlyout("DEFEND!", pX, pY, Brushes.MidnightBlue);
-                        p.Status = ShotStatus.Miss;
+                        p.Status = ShotStatus.Defend;
                     }
                     else if (Tools.IsPolygonColliding(pol, hitSkeleton.PaddleLeft.Shape))
                     {
                         hitSkeleton.PaddleLeft.State = PaddleState.Hit;
                         SetFlyout("DEFEND!", pX, pY, Brushes.MidnightBlue);
-                        p.Status = ShotStatus.Miss;
+                        p.Status = ShotStatus.Defend;
                     }
                     // Possible body part hits.
                     else
@@ -295,6 +295,9 @@ namespace KinectShooter
                         {
                             switch (pl.Status)
                             {
+                                case ShotStatus.Defend:
+                                    response.Append("3,");
+                                    break;
                                 case ShotStatus.Hit:
                                     response.Append("2,");
                                     break;
