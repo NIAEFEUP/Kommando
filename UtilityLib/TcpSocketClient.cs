@@ -7,10 +7,12 @@ namespace Utility
 {
     public class TcpSocketClient
     {
+        //private readonly string ServerAddress = "192.168.27.133";
         private readonly string ServerAddress = "127.0.0.1";
-        private readonly int ServerPort = 3000;
+        private readonly int ServerPort = 11000;
         private TcpClient client;
         private NetworkStream stream;
+        public byte[] Buffer { get; set; }
 
         public delegate void MessageReceivedHandler(TcpSocketClient client, string message);
 
@@ -34,15 +36,14 @@ namespace Utility
                 this.Connected = true;
                 client.EndConnect(ar);
                 this.stream = client.GetStream();
-                byte[] buffer = new byte[1024];
-                this.stream.BeginRead(buffer, 0, buffer.Length, ReceiveCallback, buffer);
+                this.stream.BeginRead(Buffer, 0, Buffer.Length, ReceiveCallback, Buffer);
             }
             catch
             {
             }
         }
 
-        public void BeginReceive()
+        public void BeginConnect()
         {
             client.BeginConnect(System.Net.IPAddress.Parse(ServerAddress), ServerPort, ConnectCallback, null);
         }
@@ -90,13 +91,16 @@ namespace Utility
             }
 
             // Get data.
-            byte[] buffer = ar.AsyncState as byte[];
-            string data = this.Encoding.GetString(buffer, 0, read);
+            string data = this.Encoding.GetString(Buffer, 0, read);
             if (this.MessageReceived != null)
             {
                 this.MessageReceived(this, data);
             }
-            stream.BeginRead(buffer, 0, buffer.Length, ReceiveCallback, buffer);
+        }
+
+        public void BeginReceive()
+        {
+            stream.BeginRead(Buffer, 0, Buffer.Length, ReceiveCallback, Buffer);
         }
     }
 }

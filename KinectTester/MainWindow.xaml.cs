@@ -14,65 +14,38 @@ using System.Windows.Shapes;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using WebSocketSharp;
+using WebSocketSharp.Server;
 
-namespace KinectTester
+namespace KinectTester 
 {
+    public class Echo : WebSocketService
+    {
+        protected override void OnMessage (MessageEventArgs e)
+        {
+            Send (e.Data);
+        }
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        private MyTcpListener server;
-        private TcpClient client;
+        //private TcpClient client;
         private int playerIndex;
         private int playerScore;
         private Encoding encoding;
+        private WebSocketServer wsServer;
+        /*private WebSocketServer wsServer;
+        private UserContext client;*/
 
         public MainWindow()
         {
             InitializeComponent();
-            encoding = Encoding.Default;
-            playerIndex = 0;
-            playerScore = 0;
-            server = new MyTcpListener();
-            client = server.GetClient();
-            byte[] buffer = new byte[1024];
-            client.GetStream().BeginRead(buffer, 0, buffer.Length, ReceiveCallback, buffer);
-        }
-
-        private void ReceiveCallback(IAsyncResult ar)
-        {
-           /* if (MainCanvas.Dispatcher.CheckAccess())
-            {*/
-                int read;
-                try
-                {
-                    read = client.GetStream().EndRead(ar);
-                }
-                catch
-                {
-                    return;
-                }
-
-                // Nothing read, connection closed.
-                if (read == 0)
-                {
-                    return;
-                }
-
-                byte[] buffer = ar.AsyncState as byte[];
-                string message = encoding.GetString(buffer, 0, read);
-                string[] tokens = message.Split(',');
-                int shot = int.Parse(tokens[playerIndex]);
-                Console.WriteLine(message);
-                if (shot == 2)
-                    playerScore += 1000;
-                client.GetStream().BeginRead(buffer, 0, buffer.Length, ReceiveCallback, buffer);
-            /*}
-            else
-            {
-                MainCanvas.Dispatcher.Invoke(new Action(() => ReceiveCallback(ar)));
-            }*/
+            wsServer = new WebSocketServer(IPAddress.Parse("127.0.0.1"), 11000);
+            wsServer.AddWebSocketService<Echo>("/");
+            wsServer.Start();
         }
 
         private void MainCanvas_MouseMove(object sender, MouseEventArgs e)
@@ -101,9 +74,10 @@ namespace KinectTester
                         sb.Append("-1,-1,-1,-1,");
                 }
             }
-            byte[] buffer = encoding.GetBytes(sb.ToString());
-            client.GetStream().Write(buffer, 0, buffer.Length);
-            client.GetStream().Flush();
+            sb.Append('\n');
+            IWebSocketSession ws = wsServer.WebSocketServices.GetSessions("/").Sessions.FirstOrDefault();
+            if(ws != null)
+                ws.Context.WebSocket.Send(sb.ToString());
         }
 
         private void Window_MouseUp(object sender, MouseButtonEventArgs e)
@@ -132,9 +106,10 @@ namespace KinectTester
                         sb.Append("-1,-1,-1,-1,");
                 }
             }
-            byte[] buffer = encoding.GetBytes(sb.ToString());
-            client.GetStream().Write(buffer, 0, buffer.Length);
-            client.GetStream().Flush();
+            sb.Append('\n');
+            IWebSocketSession ws = wsServer.WebSocketServices.GetSessions("/").Sessions.FirstOrDefault();
+            if (ws != null)
+                ws.Context.WebSocket.Send(sb.ToString());
         }
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
@@ -166,45 +141,6 @@ namespace KinectTester
                     this.playerScore = 0;
                     break;
             }
-        }
-    }
-
-    class MyTcpListener
-    {
-        private TcpListener server;
-
-        public MyTcpListener()
-        {
-            try
-            {
-                // Set the TcpListener on port 13000.
-                Int32 port = 3000;
-                IPAddress localAddr = IPAddress.Parse("127.0.0.1");
-
-                // TcpListener server = new TcpListener(port);
-                server = new TcpListener(localAddr, port);
-
-                // Start listening for client requests.
-                server.Start();
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine("SocketException: {0}", e);
-            }
-
-            Console.WriteLine("\nHit enter to continue...");
-            Console.Read();
-        }
-
-        public TcpClient GetClient()
-        {
-            Console.Write("Waiting for a connection... ");
-
-            // Perform a blocking call to accept requests.
-            // You could also user server.AcceptSocket() here.
-            TcpClient client = server.AcceptTcpClient();
-            Console.WriteLine("Connected!");
-            return client;
         }
     }
 }

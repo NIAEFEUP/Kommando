@@ -14,6 +14,8 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Utility;
+using System.Collections.Generic;
+using WebSocketSharp;
 
 namespace KinectShooter
 {
@@ -30,6 +32,8 @@ namespace KinectShooter
         private Player[] players;
         private int skeletonId = -1;
         private bool endGame = false;
+        private WebSocket ws;
+        private string token;
 
         public MainWindow()
         {
@@ -61,6 +65,7 @@ namespace KinectShooter
             if (args.GestureType == KinectGestureType.WaveRightHand && this.skeletonId == -1 && !endGame)
             {
                 this.skeletonId = args.TrackingId;
+                token = "";
                 this.endGame = false;
                 this.controller.StartTrackingSkeleton(this.skeletonId);
                 foreach (BodyPart part in hitSkeleton.BodyParts.Values)
@@ -81,19 +86,160 @@ namespace KinectShooter
                 Storyboard sb = (Storyboard)this.FindResource("ScoreboardAppearStoryboard");
                 sb.Begin();
 
-                // Start TCP client.
-                this.client = new TcpSocketClient();
-                this.client.MessageReceived += callback_MessageReceived;
-                this.client.BeginReceive();
+                // Start websocket client.
+                ws = new WebSocket("ws://192.168.27.133:1234/");
+                ws.OnMessage += OnClientReceive;
+                ws.Connect();
             }
         }
 
-        public void callback_MessageReceived(TcpSocketClient client, string message)
+        private void OnClientReceive(object sender, MessageEventArgs args)
         {
+            string message = args.Data;
+
             // Check for handshake communication.
             if (message == "whoareyou")
             {
-                client.BeginSend("v");
+                ws.Send("v");
+                return;
+            }
+
+            if (message.Length == 4)
+            {
+                this.token = message;
+                return;
+            }
+
+            // Checks if an invoke is required.
+            if (MainCanvas.Dispatcher.CheckAccess())
+            {
+                // No changes after endgame.
+                if (this.endGame)
+                {
+                    return;
+                }
+
+                string[] tokens = message.Split(',');
+                lock (this.players)
+                {
+                    // No longer accepting updates after player dying.
+                    if (hitSkeleton.DamageTaken >= 1.0f && !endGame)
+                    {
+                        float[] scores = new float[players.Length];
+                        for (int i = 0; i < players.Length; ++i)
+                        {
+                            players[i].Score.ScoreContent = tokens[i * 4 + 3];
+                            scores[i] = float.Parse(tokens[i * 4 + 3]);
+                            if (scores[i] == -1)
+                            {
+                                RemovePlayer(i);
+                            }
+                        }
+                        int index = scores.ToList().IndexOf(scores.Max());
+                        Player p = players[index];
+                        endGame = true;
+
+                        // Animate victory screen.
+                        Storyboard vicStoryboard = (Storyboard)this.FindResource("VictoryStoryboard");
+                        Storyboard vicImageStoryboard = (Storyboard)this.FindResource("VictoryImageStoryboard");
+                        vicImageStoryboard.Completed += callback_VictoryStoryboardCompleted;
+                        vicStoryboard.Completed += (s, a) => this.endGame = false;
+                        VictoryBackgroundRectangle.Fill = p.Sights.SightsColor;
+                        VictoryBackgroundRectangle.BeginStoryboard(vicStoryboard);
+                        VictoryImageRectangle.BeginStoryboard(vicImageStoryboard);
+                    }
+                    else if (!endGame)
+                    {
+                        for (int i = 0; i < players.Length; ++i)
+                        {
+                            Player p = this.players[i];
+                            float x = float.Parse(tokens[i * 4]);
+                            float y = float.Parse(tokens[i * 4 + 1]);
+                            int shot = int.Parse(tokens[i * 4 + 2]);
+                            string score = tokens[i * 4 + 3];
+                            p.Score.ScoreContent = score;
+                            MovePlayer(i, x, y);
+
+                            // Player exited.
+                            if (shot == -1 && p.PlayerActive)
+                            {
+                                RemovePlayer(i);
+                            }
+                            // Player entered.
+                            else if (shot != -1 && !p.PlayerActive)
+                            {
+                                AddPlayer(i, score);
+                            }
+
+                            // A player shot.
+                            if (shot == 1)
+                            {
+                                FirePlayer(i);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MainCanvas.Dispatcher.Invoke(new Action(() => OnClientReceive(sender, args)));
+            }
+        }
+
+        /*public void callback_MessageReceived(TcpSocketClient client, string message)
+        {
+            string[] fragments = message.Split('\n');
+            for (int i = 0; i < fragments.Length; ++i)
+            {
+                fragments[i] = fragments[i].Trim();
+            }
+
+            // Only one fragment, possibly incomplete.
+            if (fragments.Length == 1)
+            {
+                messageFragment += message;
+                this.client.BeginReceive();
+                return;
+            }
+            // More than one fragment, at least one complete.
+            else
+            {
+                for (int i = 0; i < fragments.Length; ++i)
+                {
+                    messageFragment += fragments[i];
+
+                    // Last fragment, always incomplete.
+                    if (i < fragments.Length - 1 )
+                    {
+                        messageQueue.Enqueue(messageFragment);
+                        messageFragment = "";
+                    }
+                }
+            }
+
+            // There is a message to process.
+            if (messageQueue.Count() > 0)
+            {
+                message = messageQueue.Dequeue();
+                Console.WriteLine(message);
+            }
+            else
+            {
+                this.client.BeginReceive();
+                return;
+            }
+
+            // Check for handshake communication.
+            if (message == "whoareyou")
+            {
+                this.client.BeginSend("v");
+                this.client.BeginReceive();
+                return;
+            }
+
+            if (message.Length == 4)
+            {
+                this.client.BeginReceive();
                 return;
             }
 
@@ -166,12 +312,13 @@ namespace KinectShooter
                         }
                     }
                 }
+                this.client.BeginReceive();
             }
             else
             {
                 MainCanvas.Dispatcher.Invoke(new Action(() => callback_MessageReceived(client, message)));
             }
-        }
+        }*/
 
         /// <summary>
         /// Handles skeleton frame ready events.
@@ -204,16 +351,12 @@ namespace KinectShooter
                     RemovePlayer(i);
                 }
 
+                // Disconnect socket.
+                ws.Close();
+
                 // Scoreboard animation.
                 Storyboard sb = (Storyboard)this.FindResource("ScoreboardDisappearStoryboard");
                 sb.Begin();
-
-                // Close server connection.
-                if (this.client != null)
-                {
-                    this.client.EndReceive();
-                    this.client.MessageReceived -= callback_MessageReceived;
-                }
             }
         }
 
@@ -345,7 +488,7 @@ namespace KinectShooter
                     // Append player health to response and send it.
                     float damage = hitSkeleton.DamageTaken;
                     response.Append(damage);
-                    client.BeginSend(response.ToString());
+                    ws.Send(response.ToString());
                 }
             }
         }
@@ -376,7 +519,7 @@ namespace KinectShooter
             {
                 FlyoutTextColor = color,
                 FlyoutTextContent = text,
-                FlyoutTextSize = (float)this.ActualHeight * 0.05f
+                FlyoutTextSize = (float)this.ActualHeight * 0.1f
             };
             MainCanvas.Children.Add(flyout);
             flyout.X = x;
