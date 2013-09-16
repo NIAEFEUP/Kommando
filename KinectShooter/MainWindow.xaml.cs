@@ -106,6 +106,7 @@ namespace KinectShooter
 
             if (message.Length == 4)
             {
+                MainCanvas.Dispatcher.BeginInvoke(new Action(() => this.TokenLabel.Content = message));
                 this.token = message;
                 return;
             }
@@ -186,140 +187,6 @@ namespace KinectShooter
             }
         }
 
-        /*public void callback_MessageReceived(TcpSocketClient client, string message)
-        {
-            string[] fragments = message.Split('\n');
-            for (int i = 0; i < fragments.Length; ++i)
-            {
-                fragments[i] = fragments[i].Trim();
-            }
-
-            // Only one fragment, possibly incomplete.
-            if (fragments.Length == 1)
-            {
-                messageFragment += message;
-                this.client.BeginReceive();
-                return;
-            }
-            // More than one fragment, at least one complete.
-            else
-            {
-                for (int i = 0; i < fragments.Length; ++i)
-                {
-                    messageFragment += fragments[i];
-
-                    // Last fragment, always incomplete.
-                    if (i < fragments.Length - 1 )
-                    {
-                        messageQueue.Enqueue(messageFragment);
-                        messageFragment = "";
-                    }
-                }
-            }
-
-            // There is a message to process.
-            if (messageQueue.Count() > 0)
-            {
-                message = messageQueue.Dequeue();
-                Console.WriteLine(message);
-            }
-            else
-            {
-                this.client.BeginReceive();
-                return;
-            }
-
-            // Check for handshake communication.
-            if (message == "whoareyou")
-            {
-                this.client.BeginSend("v");
-                this.client.BeginReceive();
-                return;
-            }
-
-            if (message.Length == 4)
-            {
-                this.client.BeginReceive();
-                return;
-            }
-
-            // Checks if an invoke is required.
-            if (MainCanvas.Dispatcher.CheckAccess())
-            {
-                // No changes after endgame.
-                if (this.endGame)
-                {
-                    return;
-                }
-
-                string[] tokens = message.Split(',');
-                lock (this.players)
-                {
-                    // No longer accepting updates after player dying.
-                    if (hitSkeleton.DamageTaken >= 1.0f && !endGame)
-                    {
-                        float[] scores = new float[players.Length];
-                        for (int i = 0; i < players.Length; ++i)
-                        {
-                            players[i].Score.ScoreContent = tokens[i * 4 + 3];
-                            scores[i] = float.Parse(tokens[i * 4 + 3]);
-                            if (scores[i] == -1)
-                            {
-                                RemovePlayer(i);
-                            }
-                        }
-                        int index = scores.ToList().IndexOf(scores.Max());
-                        Player p = players[index];
-                        endGame = true;
-
-                        // Animate victory screen.
-                        Storyboard vicStoryboard = (Storyboard)this.FindResource("VictoryStoryboard");
-                        Storyboard vicImageStoryboard = (Storyboard)this.FindResource("VictoryImageStoryboard");
-                        vicImageStoryboard.Completed += callback_VictoryStoryboardCompleted;
-                        vicStoryboard.Completed += (s, a) => this.endGame = false;
-                        VictoryBackgroundRectangle.Fill = p.Sights.SightsColor;
-                        VictoryBackgroundRectangle.BeginStoryboard(vicStoryboard);
-                        VictoryImageRectangle.BeginStoryboard(vicImageStoryboard);
-                    }
-                    else if(!endGame)
-                    {
-                        for (int i = 0; i < players.Length; ++i)
-                        {
-                            Player p = this.players[i];
-                            float x = float.Parse(tokens[i * 4]);
-                            float y = float.Parse(tokens[i * 4 + 1]);
-                            int shot = int.Parse(tokens[i * 4 + 2]);
-                            string score = tokens[i * 4 + 3];
-                            p.Score.ScoreContent = score;
-                            MovePlayer(i, x, y);
-
-                            // Player exited.
-                            if (shot == -1 && p.PlayerActive)
-                            {
-                                RemovePlayer(i);
-                            }
-                            // Player entered.
-                            else if (shot != -1 && !p.PlayerActive)
-                            {
-                                AddPlayer(i, score);
-                            }
-
-                            // A player shot.
-                            if (shot == 1)
-                            {
-                                FirePlayer(i);
-                            }
-                        }
-                    }
-                }
-                this.client.BeginReceive();
-            }
-            else
-            {
-                MainCanvas.Dispatcher.Invoke(new Action(() => callback_MessageReceived(client, message)));
-            }
-        }*/
-
         /// <summary>
         /// Handles skeleton frame ready events.
         /// </summary>
@@ -330,6 +197,7 @@ namespace KinectShooter
             if (this.skeletonId != -1 && ((skeleton == null) || (this.skeletonId != skeleton.TrackingId)))
             {
                 this.skeletonId = -1;
+                this.TokenLabel.Content = "";
                 this.controller.StopTrackingSkeleton();
                 foreach (BodyPart part in hitSkeleton.BodyParts.Values)
                 {
@@ -365,7 +233,27 @@ namespace KinectShooter
             Player p = this.players[index];
             if (p.PlayerActive)
             {
-                p.Sights.Fire();
+                // Resize all sights.
+                float size = (float)this.ActualWidth * 0.05f;
+                float sightsWidth = size * 0.1f;
+                float sightsClose = size * 0.5f;
+                float sightsInnerWidth = size * 0.2f;
+                SightsControl s = new SightsControl
+                {
+                    SightsColor = p.Sights.SightsColor,
+                    Width = size,
+                    Height = size,
+                    SightsWidth = 0.0f,
+                    SightsClose = sightsClose,
+                    SightsInnerWidth = 0.0f
+                };
+                MainCanvas.Children.Add(s);
+                Canvas.SetLeft(s, p.X - size / 2.0f);
+                Canvas.SetTop(s, p.Y - size / 2.0f);
+                float x = p.X / (float)this.ActualWidth;
+                float y = p.Y / (float)this.ActualHeight;
+                s.FireAnimationStoryBoard.Completed += (snd, arg) => ShotEnded(p, x, y, s);
+                s.Fire();
             }
         }
 
@@ -394,28 +282,34 @@ namespace KinectShooter
             Canvas.SetTop(p.Sights, -500);
         }
 
-        public void ShotEnded(Player p)
+        public void ShotEnded(Player p, float x, float y, SightsControl s)
         {
+            // Remove the control.
+            MainCanvas.Children.Remove(s);
+
             // Locking here prevents concurrence from the network listener.
             lock (this.players)
             {
                 if (p.PlayerActive && hitSkeleton.DamageTaken < 1.0)
                 {
+                    float pX = x * (float)this.ActualWidth;
+                    float pY = y * (float)this.ActualHeight;
+
                     // Build bullet polygon.
                     Polygon pol = new Polygon();
-                    pol.Points = hitSkeleton.RegularPolygonToPointCollection(new Vector2(p.X, p.Y), (float)p.Sights.ActualWidth * 0.5f, 15);
+                    pol.Points = hitSkeleton.RegularPolygonToPointCollection(new Vector2(pX, pY), (float)p.Sights.ActualWidth * 0.5f, 15);
 
                     // Check for weapon hits.
                     if (Tools.IsPolygonColliding(pol, hitSkeleton.PaddleRight.Shape))
                     {
                         hitSkeleton.PaddleRight.State = PaddleState.Hit;
-                        SetFlyout("DEFEND!", p.X, p.Y, Brushes.SlateBlue);
+                        SetFlyout("DEFEND!", pX, pY, Brushes.SlateBlue);
                         p.Status = ShotStatus.Miss;
                     }
                     else if (Tools.IsPolygonColliding(pol, hitSkeleton.PaddleLeft.Shape))
                     {
                         hitSkeleton.PaddleLeft.State = PaddleState.Hit;
-                        SetFlyout("DEFEND!", p.X, p.Y, Brushes.SlateBlue);
+                        SetFlyout("DEFEND!", pX, pY, Brushes.SlateBlue);
                         p.Status = ShotStatus.Miss;
                     }
                     // Possible body part hits.
@@ -429,19 +323,19 @@ namespace KinectShooter
                         if (part != null)
                         {
                             part.State = BodyPartState.Hit;
-                            SetFlyout("HIT!", p.X, p.Y, Brushes.SlateBlue);
+                            SetFlyout("HIT!", pX, pY, Brushes.SlateBlue);
                             p.Status = ShotStatus.Hit;
                         }
                         // A part previously hit was hit again.
                         else if (hitParts.Count() > 0)
                         {
-                            SetFlyout("HIT!", p.X, p.Y, Brushes.SlateBlue);
+                            SetFlyout("HIT!", pX, pY, Brushes.SlateBlue);
                             p.Status = ShotStatus.Hit;
                         }
                         // Nothing was hit.
                         else
                         {
-                            SetFlyout("MISSED!", p.X, p.Y, Brushes.SlateBlue);
+                            SetFlyout("MISSED!", pX, pY, Brushes.SlateBlue);
                             p.Status = ShotStatus.Miss;
                         }
                     }
@@ -575,9 +469,6 @@ namespace KinectShooter
                 p.Sights.SightsWidth = sightsWidth;
                 p.Sights.SightsClose = sightsClose;
                 p.Sights.SightsInnerWidth = sightsInnerWidth;
-
-                // Add fire callback.
-                p.Sights.FireAnimationStoryBoard.Completed += (s, a) => this.ShotEnded(p);
             }
 
             // Setup timed event to update flyout text positions.
@@ -610,6 +501,18 @@ namespace KinectShooter
                     p.Sights.SightsWidth = sightsWidth;
                     p.Sights.SightsClose = sightsClose;
                     p.Sights.SightsInnerWidth = sightsInnerWidth;
+                }
+                foreach (UIElement elem in MainCanvas.Children)
+                {
+                    SightsControl s = elem as SightsControl;
+                    if (s != null)
+                    {
+                        s.Width = size;
+                        s.Height = size;
+                        s.SightsWidth = sightsWidth;
+                        s.SightsClose = sightsClose;
+                        s.SightsInnerWidth = sightsInnerWidth;
+                    }
                 }
             }
         }

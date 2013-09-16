@@ -123,5 +123,21 @@
                 <ImageBrush ImageSource="Images/victory.png"/>
             </Rectangle.Fill>
         </Rectangle>
+		<Grid Grid.RowSpan="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition/>
+				<ColumnDefinition Width="3*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="8*"/>
+				<RowDefinition/>
+			</Grid.RowDefinitions>
+			<Viewbox
+				VerticalAlignment="Stretch"
+				HorizontalAlignment="Left"
+				Height="Auto" Grid.Row="1">
+				<Label x:Name="TokenLabel"  Foreground="#FF272727" Content="" FontWeight="Bold" HorizontalAlignment="Left" />
+			</Viewbox>
+		</Grid>
     </Grid>
 </Window>

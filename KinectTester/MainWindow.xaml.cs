@@ -23,7 +23,6 @@ namespace KinectTester
     {
         protected override void OnMessage (MessageEventArgs e)
         {
-            Send (e.Data);
         }
     }
 
@@ -37,13 +36,11 @@ namespace KinectTester
         private int playerScore;
         private Encoding encoding;
         private WebSocketServer wsServer;
-        /*private WebSocketServer wsServer;
-        private UserContext client;*/
 
         public MainWindow()
         {
             InitializeComponent();
-            wsServer = new WebSocketServer(IPAddress.Parse("127.0.0.1"), 11000);
+            wsServer = new WebSocketServer(IPAddress.Parse("127.0.0.1"), 1234);
             wsServer.AddWebSocketService<Echo>("/");
             wsServer.Start();
         }
