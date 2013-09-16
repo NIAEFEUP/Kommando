@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControLib", "ControLib\Cont
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinectTester", "KinectTester\KinectTester.csproj", "{E2B20191-CC6A-480E-AE65-C8A76301ACA1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alchemy", "Alchemy\Alchemy.csproj", "{45486CDE-86A3-4769-952F-E0821BF79493}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "websocket-sharp", "websocket-sharp\websocket-sharp.csproj", "{B357BAC7-529E-4D81-A0D2-71041B19C8DE}"
 EndProject
 Global
@@ -155,34 +153,6 @@ Global
 		{E2B20191-CC6A-480E-AE65-C8A76301ACA1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{E2B20191-CC6A-480E-AE65-C8A76301ACA1}.Release|x64.ActiveCfg = Release|Any CPU
 		{E2B20191-CC6A-480E-AE65-C8A76301ACA1}.Release|x86.ActiveCfg = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug_Ubuntu|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug_Ubuntu|Mixed Platforms.Build.0 = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug_Ubuntu|x64.ActiveCfg = Debug|x64
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug_Ubuntu|x64.Build.0 = Debug|x64
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug_Ubuntu|x86.ActiveCfg = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug|x64.ActiveCfg = Debug|x64
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug|x64.Build.0 = Debug|x64
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release_Ubuntu|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release_Ubuntu|Mixed Platforms.Build.0 = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release_Ubuntu|x64.ActiveCfg = Release|x64
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release_Ubuntu|x64.Build.0 = Release|x64
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release_Ubuntu|x86.ActiveCfg = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release|Any CPU.Build.0 = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release|x64.ActiveCfg = Release|x64
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release|x64.Build.0 = Release|x64
-		{45486CDE-86A3-4769-952F-E0821BF79493}.Release|x86.ActiveCfg = Release|Any CPU
 		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug_Ubuntu|Any CPU
 		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Debug_Ubuntu|Any CPU.Build.0 = Debug_Ubuntu|Any CPU
 		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Debug_Ubuntu|Mixed Platforms.ActiveCfg = Debug_Ubuntu|Any CPU
