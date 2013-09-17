@@ -103,7 +103,7 @@ namespace KinectShooter
                 sb.Begin();
 
                 // Start websocket client.
-                ws = new WebSocket("ws://127.0.0.1:1234/");
+                ws = new WebSocket("ws://192.168.27.133:1234/");
                 ws.OnMessage += ws_OnMessage;
                 ws.Connect();
             }

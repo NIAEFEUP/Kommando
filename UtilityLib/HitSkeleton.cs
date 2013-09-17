@@ -134,6 +134,10 @@ namespace Utility
 
                 // Left paddle (sword).
                 Vector2 handLeft = convertedJoints[JointType.WristLeft] - convertedJoints[JointType.HandLeft];
+                if (handLeft.X < 0)
+                {
+                    handLeft.X = -handLeft.X;
+                }
                 handLeft = handLeft / handLeft.Length;
                 Vector2 normalHandLeft = new Vector2(-handLeft.Y, handLeft.X);
                 Vector2 handCenter = convertedJoints[JointType.WristLeft];
