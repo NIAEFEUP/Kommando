@@ -90,7 +90,7 @@ namespace Kinect.Sensor
             if (this.sensor != null)
             {
                 this.sensor.SkeletonStream.Disable();
-                //this.sensor.DepthStream.Disable();
+                this.sensor.DepthStream.Disable();
                 this.sensor.Stop();
             }
         }

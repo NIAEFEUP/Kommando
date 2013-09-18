@@ -16,6 +16,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Utility;
 using WebSocketSharp;
+using System.ComponentModel;
 
 namespace KinectShooter
 {
@@ -24,7 +25,6 @@ namespace KinectShooter
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Storyboard backgroundAnimation;
         private SoundPlayer backgroundMusic;
         private KinectSensorController controller;
         private bool endGame = false;
@@ -94,9 +94,10 @@ namespace KinectShooter
                 this.hitSkeleton.PaddleLeft.State = PaddleState.NotHit;
 
                 // Background animation.
-                this.backgroundAnimation.Stop();
-                ((ColorAnimation)this.backgroundAnimation.Children[0]).To = Colors.Transparent;
-                this.backgroundAnimation.Begin();
+                Storyboard backgroundSb = (Storyboard)this.FindResource("BackgroundFadeOutStoryboard");
+                Storyboard backgroundImgSb = (Storyboard)this.FindResource("BackgroundFadeOutImageStoryboard");
+                this.OverlayBackRectangle.BeginStoryboard(backgroundSb);
+                this.OverlayRectangle.BeginStoryboard(backgroundImgSb);
 
                 // Scoreboard animation.
                 Storyboard sb = (Storyboard)this.FindResource("ScoreboardAppearStoryboard");
@@ -120,6 +121,7 @@ namespace KinectShooter
             {
                 this.skeletonId = -1;
                 this.TokenLabel.Content = "";
+                this.AddressLabel.Content = "";
                 this.controller.StopTrackingSkeleton();
                 foreach (BodyPart part in hitSkeleton.BodyParts.Values)
                 {
@@ -131,22 +133,25 @@ namespace KinectShooter
                 this.hitSkeleton.PaddleLeft.State = PaddleState.PreGame;
 
                 // Background animation.
-                this.backgroundAnimation.Stop();
-                ((ColorAnimation)this.backgroundAnimation.Children[0]).To = Colors.Black;
-                this.backgroundAnimation.Begin();
-
+                Storyboard backgroundSb = (Storyboard)this.FindResource("BackgroundFadeInStoryboard");
+                Storyboard backgroundImgSb = (Storyboard)this.FindResource("BackgroundFadeInImageStoryboard");
+                this.OverlayBackRectangle.BeginStoryboard(backgroundSb);
+                this.OverlayRectangle.BeginStoryboard(backgroundImgSb);
+                
                 // Scores animation.
                 for (int i = 0; i < players.Length; ++i)
                 {
                     RemovePlayer(i);
                 }
 
-                // Disconnect socket.
-                ws.Close();
-
                 // Scoreboard animation.
                 Storyboard sb = (Storyboard)this.FindResource("ScoreboardDisappearStoryboard");
                 sb.Begin();
+
+                // Disconnect socket.
+                BackgroundWorker bgw = new BackgroundWorker();
+                bgw.DoWork += (s, e) => ws.Close();
+                bgw.RunWorkerAsync();
             }
         }
 
@@ -476,13 +481,6 @@ namespace KinectShooter
             backgroundMusic.Load();
             backgroundMusic.PlayLooping();
 
-            // Setup background animation.
-            this.backgroundAnimation = new Storyboard();
-            ColorAnimation ca = new ColorAnimation(Colors.White, new Duration(BodyPart.AnimationDuration));
-            Storyboard.SetTarget(ca, this.MainCanvas);
-            Storyboard.SetTargetProperty(ca, new PropertyPath("Background.Color", new object[] { Canvas.BackgroundProperty, SolidColorBrush.ColorProperty }));
-            this.backgroundAnimation.Children.Add(ca);
-
             // Create all players.
             this.players = new Player[6];
             this.players[0] = new Player { Status = ShotStatus.None, Score = Player1Score, Sights = new ControLib.SightsControl { SightsColor = (Brush)this.FindResource("Player1Color") } };
@@ -516,10 +514,14 @@ namespace KinectShooter
 
             // Sets up and starts the sensor.
             controller = new KinectSensorController(KinectSensorType.Xbox360Sensor);
-            controller.TrackedSkeletonReady += new KinectSensorController.TrackedSkeletonReadyHandler(callback_TrackedSkeletonReady);
-            controller.Gestures.KinectGestureRecognized += new EventHandler<KinectGestureEventArgs>(callback_KinectGestureRecognized);
-            controller.Gestures.AddGesture(new KinectGestureWaveRightHand());
-            controller.StartSensor();
+            if (controller.FoundSensor())
+            {
+  
+                controller.TrackedSkeletonReady += new KinectSensorController.TrackedSkeletonReadyHandler(callback_TrackedSkeletonReady);
+                controller.Gestures.KinectGestureRecognized += new EventHandler<KinectGestureEventArgs>(callback_KinectGestureRecognized);
+                controller.Gestures.AddGesture(new KinectGestureWaveRightHand());
+                controller.StartSensor();
+            }
         }
 
         /// <summary>
@@ -592,6 +594,7 @@ namespace KinectShooter
             if (message.Length == 4)
             {
                 MainCanvas.Dispatcher.BeginInvoke(new Action(() => this.TokenLabel.Content = message));
+                MainCanvas.Dispatcher.BeginInvoke(new Action(() => this.AddressLabel.Content = @"http://ni.fe.up.pt/kommando"));
                 this.token = message;
                 return;
             }

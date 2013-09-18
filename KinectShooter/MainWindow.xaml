@@ -60,6 +60,31 @@
                 BeginTime="0:0:8"
                 Duration="0:0:2" />
         </Storyboard>
+        <Storyboard x:Key="BackgroundFadeOutStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="0.0"
+                Duration="0:0:2" />
+        </Storyboard>
+        <Storyboard x:Key="BackgroundFadeInStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="1.0"
+                Duration="0:0:2" />
+        </Storyboard>
+        <Storyboard x:Key="BackgroundFadeOutImageStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="0.0"
+                Duration="0:0:0" />
+        </Storyboard>
+        <Storyboard x:Key="BackgroundFadeInImageStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="1.0"
+                BeginTime="0:0:2"
+                Duration="0:0:0" />
+        </Storyboard>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -77,7 +102,13 @@
                 <ImageBrush ImageSource="Images/background.jpg"/>
             </Rectangle.Fill>
         </Rectangle>
-        <Canvas x:Name="MainCanvas" ClipToBounds="True" Background="Black" Grid.RowSpan="2" />
+        <Rectangle x:Name="OverlayBackRectangle" Grid.RowSpan="2" Fill="Black"/>
+        <Rectangle x:Name="OverlayRectangle" Grid.RowSpan="2" >
+            <Rectangle.Fill>
+                <ImageBrush ImageSource="Images/overlay.png" Stretch="Uniform"/>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Canvas x:Name="MainCanvas" ClipToBounds="True" Background="Transparent" Grid.RowSpan="2" />
         <Grid x:Name="ScoreboardGrid" Grid.Column="0" Grid.Row="0" Panel.ZIndex="2" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
@@ -139,6 +170,12 @@
 				Height="Auto" Grid.Row="1">
 				<Label x:Name="TokenLabel"  Foreground="#FF272727" Content="" FontWeight="Bold" HorizontalAlignment="Left" />
 			</Viewbox>
-		</Grid>
+            <Viewbox
+				VerticalAlignment="Stretch"
+				HorizontalAlignment="Right"
+				Height="Auto" Grid.Row="1" Grid.Column="1">
+                <Label x:Name="AddressLabel"  Foreground="#FF272727" Content="" FontWeight="Bold" HorizontalAlignment="Right" />
+            </Viewbox>
+        </Grid>
     </Grid>
 </Window>
