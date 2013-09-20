@@ -1,0 +1,134 @@
+body{
+	overflow:hidden;
+	display:block;	
+	margin:0;
+	width:100%;
+	height:100%;
+	color: white;
+	font-family: 'Press Start 2P', cursive;
+}
+
+#debug1{
+	position: fixed;
+	bottom: 0;
+
+}
+#debug1 div{
+	float: left;
+	display: inline-block;
+}
+#status{
+	position: fixed;
+	top: 0;
+}
+#color{
+	display: inline-block;
+	width: 20pt;
+	height: 20pt;
+	//background-color: yellow;
+}
+
+#data{
+	display: inline-block;
+}
+
+html{
+	overflow:hidden;
+
+}
+#outer{
+	overflow:hidden;
+	position:absolute;
+	top:0;
+	left:0;
+	display:block;	
+	margin:0;
+	padding:5%;
+	width:90%;
+	height:90%;
+	background-color:black;
+}
+
+#inner{
+	overflow:hidden;
+	display:block;	
+	margin:0;
+	width:90%;
+	height:90%;
+	background-color:black;
+}
+
+#joyout{
+	overflow:hidden;
+	display:inline-block;
+	margin-top:15pt;	
+	margin-left: 15pt;
+	width:120pt;
+	height:120pt;
+	padding: 5pt;
+	background-color:rgb(186,186,186);
+	border-radius: 999pt;
+	float: left;
+	border: solid 2pt white;
+}
+
+#joystick{
+	overflow:hidden;
+	display:inline-block;
+	width: 100%;
+	height: 100%;
+	background-image: url('dpad.png');
+	background-size: 120pt;
+	background-repeat: no-repeat;
+	
+}
+#bt{
+	overflow:hidden;
+	display:inline-block;
+	float: right;
+	width: 100pt;
+	height: 200pt;
+	padding: 10pt;
+
+
+
+}
+
+#ficon{
+	width: 100pt;
+	height: 100pt;
+	background-image: url('bullet.png');
+	background-size: 80pt auto;
+	background-position: 10pt 20pt;
+	background-repeat: no-repeat;
+
+
+}
+
+#fire{
+	overflow:hidden;
+	display:inline-block;
+	float: right;
+	width: 100pt;
+	height: 100pt;
+	background-color: red;
+	border: solid 2pt white;
+
+
+}
+
+#info{
+	display: inline-block;;
+}
+
+#logo{
+	display: block;
+	position: fixed;
+	bottom: 5pt;
+	right: 20pt;
+	width: 100pt;
+	height: 20pt;
+	background-image: url('logobg.png');
+	background-size: 100pt auto;
+	background-repeat: no-repeat;
+}

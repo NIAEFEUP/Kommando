@@ -1,0 +1,181 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ControLib="clr-namespace:ControLib;assembly=ControLib" x:Class="KinectShooter.MainWindow"
+        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded" Unloaded="Window_Unloaded" SizeChanged="Window_SizeChanged"
+        WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" WindowState="Maximized">
+    <Window.Resources>
+        <SolidColorBrush x:Key="Player1Color" Color="#25ADDF"/>
+        <SolidColorBrush x:Key="Player2Color" Color="#b268d9"/>
+        <SolidColorBrush x:Key="Player3Color" Color="#8abd00"/>
+        <SolidColorBrush x:Key="Player4Color" Color="#ffa712"/>
+        <SolidColorBrush x:Key="Player5Color" Color="#f83a3a"/>
+        <SolidColorBrush x:Key="Player6Color" Color="#17a086"/>
+        <Storyboard x:Key="ScoreboardAppearStoryboard">
+            <DoubleAnimation 
+                Storyboard.TargetName="ScoreboardRectangle"
+                Storyboard.TargetProperty="(Rectangle.RenderTransform).(ScaleTransform.ScaleY)"
+                To="1.0"
+                Duration="0:0:1" />
+        </Storyboard>
+        <Storyboard x:Key="ScoreboardDisappearStoryboard">
+            <DoubleAnimation 
+                Storyboard.TargetName="ScoreboardRectangle"
+                Storyboard.TargetProperty="(Rectangle.RenderTransform).(ScaleTransform.ScaleY)"
+                To="0.0"
+                BeginTime="0:0:0.5"
+                Duration="0:0:1" />
+        </Storyboard>
+        <Storyboard x:Key="PlayerScoreAppearStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(ControLib:ScoreControl.Opacity)"
+                To="1.0"
+                Duration="0:0:1" />
+        </Storyboard>
+        <Storyboard x:Key="PlayerScoreDisappearStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(ControLib:ScoreControl.Opacity)"
+                To="0.0"
+                Duration="0:0:0.5" />
+        </Storyboard>
+        <Storyboard x:Key="VictoryStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="1.0"
+                Duration="0:0:2" />
+            <DoubleAnimation 
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="0.0"
+                BeginTime="0:0:12"
+                Duration="0:0:3" />
+        </Storyboard>
+        <Storyboard x:Key="VictoryImageStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="1.0"
+                Duration="0:0:2" />
+            <DoubleAnimation 
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="0.0"
+                BeginTime="0:0:8"
+                Duration="0:0:2" />
+        </Storyboard>
+        <Storyboard x:Key="BackgroundFadeOutStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="0.0"
+                Duration="0:0:2" />
+        </Storyboard>
+        <Storyboard x:Key="BackgroundFadeInStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="1.0"
+                Duration="0:0:2" />
+        </Storyboard>
+        <Storyboard x:Key="BackgroundFadeOutImageStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="0.0"
+                Duration="0:0:0" />
+        </Storyboard>
+        <Storyboard x:Key="BackgroundFadeInImageStoryboard">
+            <DoubleAnimation
+                Storyboard.TargetProperty="(Rectangle.Opacity)"
+                To="1.0"
+                BeginTime="0:0:2"
+                Duration="0:0:0" />
+        </Storyboard>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="12*"/>
+        </Grid.RowDefinitions>
+        <Grid x:Name="BackgroundMusicGrid" />
+        <Rectangle x:Name="ScoreboardRectangle" Fill="#FF131313" Panel.ZIndex="1">
+            <Rectangle.RenderTransform>
+                <ScaleTransform ScaleX="1" ScaleY="0" />
+            </Rectangle.RenderTransform>
+        </Rectangle>
+        <Rectangle Stroke="Black" Grid.RowSpan="2">
+            <Rectangle.Fill>
+                <ImageBrush ImageSource="Images/background.jpg"/>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle x:Name="OverlayBackRectangle" Grid.RowSpan="2" Fill="Black"/>
+        <Rectangle x:Name="OverlayRectangle" Grid.RowSpan="2" >
+            <Rectangle.Fill>
+                <ImageBrush ImageSource="Images/overlay.png" Stretch="Uniform"/>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Canvas x:Name="MainCanvas" ClipToBounds="True" Background="Transparent" Grid.RowSpan="2" />
+        <Grid x:Name="ScoreboardGrid" Grid.Column="0" Grid.Row="0" Panel.ZIndex="2" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <ControLib:ScoreControl x:Name="Player1Score" ScoreColor="{StaticResource ResourceKey=Player1Color}" ScoreContent="" Grid.Column="0" Opacity="0.0">
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player2Score" ScoreColor="{StaticResource ResourceKey=Player2Color}" ScoreContent="" Grid.Column="1" Opacity="0.0" >
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player3Score" ScoreColor="{StaticResource ResourceKey=Player3Color}" ScoreContent="" Grid.Column="2" Opacity="0.0" >
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player4Score" ScoreColor="{StaticResource ResourceKey=Player4Color}" ScoreContent="" Grid.Column="3" Opacity="0.0" >
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player5Score" ScoreColor="{StaticResource ResourceKey=Player5Color}" ScoreContent="" Grid.Column="4" Opacity="0.0" >
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+            <ControLib:ScoreControl x:Name="Player6Score" ScoreColor="{StaticResource ResourceKey=Player6Color}" ScoreContent="" Grid.Column="5" Opacity="0.0">
+                <ControLib:ScoreControl.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </ControLib:ScoreControl.RenderTransform>
+            </ControLib:ScoreControl>
+        </Grid>
+        <Rectangle x:Name="VictoryBackgroundRectangle" Grid.RowSpan="2" Fill="Black" Opacity="0"/>
+        <Rectangle x:Name="VictoryImageRectangle" Opacity="0" Grid.RowSpan="2" >
+            <Rectangle.Fill>
+                <ImageBrush ImageSource="Images/victory.png"/>
+            </Rectangle.Fill>
+        </Rectangle>
+		<Grid Grid.RowSpan="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition/>
+				<ColumnDefinition Width="3*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="8*"/>
+				<RowDefinition/>
+			</Grid.RowDefinitions>
+			<Viewbox
+				VerticalAlignment="Stretch"
+				HorizontalAlignment="Left"
+				Height="Auto" Grid.Row="1">
+				<Label x:Name="TokenLabel"  Foreground="#FF272727" Content="" FontWeight="Bold" HorizontalAlignment="Left" />
+			</Viewbox>
+            <Viewbox
+				VerticalAlignment="Stretch"
+				HorizontalAlignment="Right"
+				Height="Auto" Grid.Row="1" Grid.Column="1">
+                <Label x:Name="AddressLabel"  Foreground="#FF272727" Content="" FontWeight="Bold" HorizontalAlignment="Right" />
+            </Viewbox>
+        </Grid>
+    </Grid>
+</Window>

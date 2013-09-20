@@ -1,0 +1,75 @@
+body{
+	margin: 0;
+	background-image: url('background.png');
+	height: 100%;
+	width: 100%;
+}
+
+#title{
+	position: absolute;
+top: 13pt;
+left: 50pt;
+width: 200pt;
+height: 34pt;
+background-image: url('logo.png');
+background-size: 200pt auto;
+background-repeat: no-repeat;
+}
+
+#logo{
+position: absolute;
+left: 76pt;
+top: 51pt;
+height: 150pt;
+width: 122pt;
+background-image: url('niaefeup.png');
+background-size: auto 150pt;
+background-repeat: no-repeat;
+}
+
+#tokenDiv{
+	position: absolute;
+	left: 88pt;
+	bottom: 103pt;
+	height: 30pt;
+	width: 96pt;
+	line-height: 22pt;
+	font-size: 22pt;
+	border: solid 1px black;
+	border-radius: 5% / 15%;
+	box-shadow: inset 0 0 3pt black;
+	background-color: #FFFFCC;
+
+}
+#token{
+	height: 26pt;
+	margin-top: 2pt;
+	margin-left: 19pt;
+	margin-right: 1pt;
+	width: 55pt;
+	line-height: 26pt;
+	font-size: 22pt;
+	border: none;
+	outline: none;
+	background-color: #FFFFCC;
+}
+
+#enterDiv{
+	position: absolute;
+	left: 88pt;
+	bottom: 65pt;
+	height: 30pt;
+	width: 35pt;
+	line-height: 22pt;
+	font-size: 22pt;
+	border-radius: 5% / 15%;
+}
+
+#join{
+	height: 30pt;
+	width: 97pt;
+	line-height: 22pt;
+	font-size: 22pt;
+	border: solid 1px black;
+	border-radius: 5% / 15%;
+}
